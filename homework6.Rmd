@@ -1,9 +1,11 @@
 ---
 title: "N741 Spring 2018 - Homework 6"
-subtitle:  "Homework 6 - DUE FRIDAY April 6, 2018"
 author: "Lacey Gleason"
 date: "April 5, 2018"
-output: html_document
+output:
+  word_document: default
+  html_document: default
+subtitle: Homework 6 - DUE FRIDAY April 6, 2018
 ---
 
 ```{r setup, include=FALSE}
@@ -220,10 +222,12 @@ plot(h1$mcs, p)
 
 ```
 
+Yes, based on this plot, I think MCS is a good predictor of depression. Particularly, an MCS score in the lower range seems like a fairly good predictor of having depression. 
+
 ---
 
 **Link to your Github repo for Homework 6**
-
+[https://github.com/lpgleason/N741Spring2018_Homework6.git](https://github.com/lpgleason/N741Spring2018_Homework6.git)
 
 ---
 
