@@ -1,8 +1,8 @@
 ---
 title: "N741 Spring 2018 - Homework 6"
 subtitle:  "Homework 6 - DUE FRIDAY April 6, 2018"
-author: "Melinda Higgins"
-date: "March 30, 2018"
+author: "Lacey Gleason"
+date: "April 5, 2018"
 output: html_document
 ---
 
@@ -15,19 +15,6 @@ knitr::opts_chunk$set(echo = TRUE)
 ### Background and Information on HELP Dataset
 
 For homework 6, you will be working with the **HELP** (Health Evaluation and Linkage to Primary Care) Dataset.
-
-The HELP Dataset:
-
-* You can learn more about the HELP (Health Evaluation and Linkage to Primary Care) dataset at [https://nhorton.people.amherst.edu/sasr2/datasets.php](https://nhorton.people.amherst.edu/sasr2/datasets.php). This dataset is also used by Ken Kleinman and Nicholas J. Horton for their book "SAS and R: Data Management, Statistical Analysis, and Graphics" (which is another helpful textbook).
-
-* You can download the datasets from their website [https://nhorton.people.amherst.edu/sasr2/datasets.php](https://nhorton.people.amherst.edu/sasr2/datasets.php)
-
-* The original publication is referenced at [https://www.ncbi.nlm.nih.gov/pubmed/12653820?ordinalpos=17&itool=EntrezSystem2.PEntrez.Pubmed.Pubmed_ResultsPanel.Pubmed_DefaultReportPanel.Pubmed_RVDocSum](https://www.ncbi.nlm.nih.gov/pubmed/12653820?ordinalpos=17&itool=EntrezSystem2.PEntrez.Pubmed.Pubmed_ResultsPanel.Pubmed_DefaultReportPanel.Pubmed_RVDocSum)
-
-* The HELP documentation (including all forms/surveys/instruments used) are located at:
-    + [https://nhorton.people.amherst.edu/help/](https://nhorton.people.amherst.edu/help/)
-    + specifically the details on all BASELINE assessments are located in this PDF [https://nhorton.people.amherst.edu/help/HELP-baseline.pdf](https://nhorton.people.amherst.edu/help/HELP-baseline.pdf)
-    + with the follow up time points described in the PDF [https://nhorton.people.amherst.edu/help/HELP-followup.pdf](https://nhorton.people.amherst.edu/help/HELP-followup.pdf)
 
 ###Summary of Entire HELP Dataset - Complete Codebook
 
@@ -68,6 +55,40 @@ knitr::kable(t(ldf),
 
 **SETUP** Download and run the "loadHELP.R" `R` script (included in this Github repo [https://github.com/melindahiggins2000/N741Spring2018_Homework6](https://github.com/melindahiggins2000/N741Spring2018_Homework6)) to read in the HELP Dataset "helpmkh.sav". This script also pulls out the variables you need and creates the dichotomous variable for depression `cesd_gte16` which you will need for the logistic regression.
 
+```{r}
+# use this script to setup the data subset from
+# HELP to use for N741 Spring 2018 Homework 6
+
+# load libraries and dataset
+
+library(tidyverse)
+library(haven)
+helpdata <- haven::read_spss("helpmkh.sav")
+
+# choose variables for Homework 6
+
+h1 <- helpdata %>%
+  select(age, female, pss_fr, homeless, 
+         pcs, mcs, cesd)
+
+# add dichotomous variable
+# to indicate depression for
+# people with CESD scores >= 16
+
+h1 <- h1 %>%
+  mutate(cesd_gte16 = cesd >= 16)
+
+# change cesd_gte16 LOGIC variable type
+# to numeric coded 1=TRUE and 0=FALSE
+
+h1$cesd_gte16 <- as.numeric(h1$cesd_gte16)
+
+# check final data subset h1
+summary(h1)
+
+```
+
+
 After running this R script, you will have a data frame called `h1` you can use to do the rest of your analyses. You can also copy this code into your first R markdown code chunk to get you started on Homework 6.
 
 For Homework 6, you will be looking at depression in these subjects. First, you will be running a model to look at the continuous depression measure - the CESD [Center for Epidemiologic Studies Depression Scale](http://cesd-r.com/) which is a measure of depressive symptoms. Also see the APA details on the CESD at [http://www.apa.org/pi/about/publications/caregivers/practice-settings/assessment/tools/depression-scale.aspx](http://www.apa.org/pi/about/publications/caregivers/practice-settings/assessment/tools/depression-scale.aspx). The CESD can be used to predict actual clinical depression but it is not technically a diagnosis of depression. The CESD scores range from 0 (no depressive symptoms) to 60 (most severe depressive symptoms). You will use the (`cesd`) variable to run a linear regression.
@@ -78,9 +99,19 @@ The recommended threshold use to indicate potential clinical depression is for p
 
 1. [Model 1] Run a simple linear regression (`lm()`) for `cesd` using the `mcs` variable, which is the mental component quality of life score from the SF36.
 
+```{r}
+LinearMod <- lm(formula = cesd ~ mcs, data = h1)
+
+summary(LinearMod)
+```
+
 2. Write the equation of the final fitted model (i.e. what is the intercept and the slope)? Write a sentence describing the model results (interpret the intercept and slope). _NOTE: The `mcs` values range form 0 to 100 where the population norm for "normal mental health quality of life" is considered to be a 50. If you score higher than 50 on the `mcs` you have mental health better than the population and visa versa - if your `mcs` scores are less than 50 then your mental health is considered to be worse than the population norm._
 
+The equation of the fitted model is cesd = 53.9022 - 0.6647(mcs). The intercept is 53.9022. The slope is -0.6647. For each one unit increase in mcs, there is a 0.6647 unit decrease in CESD score.
+
 3. How much variability in the `cesd` does the `mcs` explain? (what is the R<sup>2</sup>?) Write a sentence describing how well the `mcs` does in predicting the `cesd`.
+
+The adjusted R squared is 0.4638. MCS explains 46% of the variation in CESD score.
 
 4. [Model 2] Run a second linear regression model (`lm()`) for the `cesd` putting in all of the other variables: 
     + `age`
@@ -91,23 +122,108 @@ The recommended threshold use to indicate potential clinical depression is for p
     + `mcs`
     
     + Print out the model results with the coefficients and tests and model fit statistics.
+    
+```{r}
+LinearMod2 <- lm(formula = cesd ~ age + female + pss_fr + homeless + pcs + mcs, data = h1)
+
+summary(LinearMod2)
+```
+
 
 5. Which variables are significant in the model? Write a sentence or two describing the impact of these variables for predicting depression scores (HINT: interpret the coefficient terms).
 
+The variables in the model that are significant are `female`, `pss_fr`, `pcs`, and `mcs`. Being female is associated with a 2.35 increase in CESD score. Every one unit increase in pss_friend score is associated with a 0.26 decrease in CESD score. Every one unit increase in pcs score is associated with a 0.24 decrease in CESD score. Every one unit increase in mcs score is associated with 0.62 decrease in CESD score. 
+
+
 6. Following the example we did in class for the Prestige dataset [https://cdn.rawgit.com/vhertzb/2018week9/2f2ea142/2018week9.html?raw=true](https://cdn.rawgit.com/vhertzb/2018week9/2f2ea142/2018week9.html?raw=true), generate the diagnostic plotss for this model with these 6 predictors (e.g. get the residual plot by variables, the added-variable plots, the Q-Q plot, diagnostic plots). Also run the VIFs to check for multicollinearity issues.
+
+```{r}
+
+library(car)
+#get the residual plots
+residualPlots(LinearMod2)
+
+avPlots(LinearMod2, id.n=2, id.cex=0.7)
+
+qqPlot(LinearMod2, id.n=3)
+
+influencePlot(LinearMod2, id.n=3)
+
+ncvTest(LinearMod2)
+
+vif(LinearMod2)
+```
 
 7. [Model 3] Repeat Model 1 above, except this time run a logistic regression (`glm()`) to predict CESD scores => 16 (using the `cesd_gte16` as the outcome) as a function of `mcs` scores. Show a summary of the final fitted model and explain the coefficients. [**REMEMBER** to compute the Odds Ratios after you get the raw coefficient (betas)].
 
-8. Use the `predict()` function like we did in class to predict CESD => 16 and compare it back to the original data. For now, use a cutoff probability of 0.5 - if the probability is > 0.5 consider this to be true and false otherwise. Like we did in class. **REMEMBER** See the R code for the class example at [https://github.com/melindahiggins2000/N741_lecture11_27March2018/blob/master/lesson11_logreg_Rcode.R](https://github.com/melindahiggins2000/N741_lecture11_27March2018/blob/master/lesson11_logreg_Rcode.R)
+```{r}
+
+model1 <- glm(cesd_gte16 ~ mcs, data=h1, family=binomial)
+
+model1
+summary(model1)
+
+# coefficients of the model - these are the
+# RAW Betas 
+coef(model1)
+
+# take the exp to get the odds ratios
+exp(coef(model1))
+
+```
+The odds ratio is 0.84. This means that for everyone one unit increase in MCS, the odds of depression are 16% lower. 
+
+8. Use the `predict()` function like we did in class to predict CESD => 16 and compare it back to the original data. For now, use a cutoff probability of 0.5 - if the probability is > 0.5 consider this to be true and false otherwise. Like we did in class. 
     + How well did the model correctly predict CESD scores => 16 (indicating depression)? (make the "confusion matrix" and look at the true positives and true negatives versus the false positives and false negatives).
+    
+```{r}
+
+# look at the predicted probabilities
+# review the help for predict.glm
+model1.predict <- predict(model1, newdata=h1,
+                      type="response")
+
+plot(h1$cesd_gte16, model1.predict)
+
+table(h1$cesd_gte16, model1.predict > 0.5)
+
+```
+  
     
 9. Make an ROC curve plot and compute the AUC and explain if this is a good model for predicting depression or not
 
-10. Make a plot showing the probability curve - put the `mcs` values on the X-axis and the probability of depression on the Y-axis. Based on this plot, do you think the `mcs` is a good predictor of depression? [**FYI** This plot is also called an "effect plot" is you're using `Rcmdr` to do these analyses.]
+```{r}
+library(ROCR)
+p <- predict(model1, newdata=h1,
+             type="response")
+pr <- prediction(p, as.numeric(h1$cesd_gte16))
+prf <- performance(pr, measure = "tpr", 
+                  x.measure="fpr")
+plot(prf)
+abline(a=0, b=1, col="red")
+
+auc <-performance (pr, measure = "auc")
+auc <- auc@y.values[[1]]
+auc
+
+```
+Yes, this is a good model for predicting depression because the AUC is 0.92, which means that the classifer is relatively good at separating out positive and negative values for depression.
+
+10. Make a plot showing the probability curve - put the `mcs` values on the X-axis and the probability of depression on the Y-axis. Based on this plot, do you think the `mcs` is a good predictor of depression? [**FYI** This plot is also called an "effect plot" if you're using `Rcmdr` to do these analyses.]
+
+
+```{r}
+
+
+
+plot(h1$mcs, p)
+
+```
 
 ---
 
-**Use R markdown to complete your homework and show all of your code and output in your final report - Turn in a PDF of your report to Canvas. Include a link to your Github repo for Homework 6**
+**Link to your Github repo for Homework 6**
+
 
 ---
 
